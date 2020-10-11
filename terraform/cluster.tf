@@ -3,8 +3,8 @@ terraform {
     skip_credentials_validation = true
     skip_metadata_api_check     = true
     endpoint                    = "https://ams3.digitaloceanspaces.com"
-    region                      = "us-east-1" // needed
-    bucket                      = "tfstate-aura" // name of your space
+    region                      = "us-east-1"
+    bucket                      = "tfstate-aura"
     key                         = "infrastructure.tfstate"
   }
 }
@@ -54,4 +54,37 @@ resource "helm_release" "metrics_server" {
   repository = "https://kubernetes-charts.storage.googleapis.com"
   chart      = "metrics-server"
   version    = "2.11.2"
+}
+
+resource "helm_release" "traefik" {
+  name       = "traefik"
+  repository = "https://helm.traefik.io/traefik"
+  chart      = "traefik"
+  version    = "9.4.3"
+  
+  set {
+    name = "deployment.replicas"
+    value = "2"
+  }
+}
+
+data "kubernetes_service" "traefik" {
+  metadata {
+    name = "traefik"
+    namespace = "default"
+  }
+
+  depends_on = [helm_release.traefik]
+}
+
+output "cluster_access" {
+  value = {
+    endpoint: digitalocean_kubernetes_cluster.cluster.endpoint
+    token: digitalocean_kubernetes_cluster.cluster.kube_config[0].token
+    ca_cert: digitalocean_kubernetes_cluster.cluster.kube_config[0].cluster_ca_certificate
+  }
+}
+
+output "ingress_ip" {
+  value = data.kubernetes_service.traefik.load_balancer_ingress[0].ip
 }
