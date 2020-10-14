@@ -36,6 +36,13 @@ provider "helm" {
   }
 }
 
+locals {
+  default_node_pool = {
+    size = "s-2vcpu-4gb"
+    node_count = 1
+  }
+}
+
 resource "digitalocean_kubernetes_cluster" "cluster" {
   name    = "infrastructure-${var.env}-cluster"
   region  = "ams3"
@@ -43,38 +50,10 @@ resource "digitalocean_kubernetes_cluster" "cluster" {
   version = "1.18.8-do.1"
 
   node_pool {
-    name       = "${var.env}-s-1vcpu-2gb"
-    size       = "s-1vcpu-2gb"
-    node_count = 1
+    name       = "${var.env}-${local.default_node_pool.size}"
+    size       = local.default_node_pool.size
+    node_count = local.default_node_pool.node_count
   }
-}
-
-resource "helm_release" "metrics_server" {
-  name       = "metrics-server"
-  repository = "https://kubernetes-charts.storage.googleapis.com"
-  chart      = "metrics-server"
-  version    = "2.11.2"
-}
-
-resource "helm_release" "traefik" {
-  name       = "traefik"
-  repository = "https://helm.traefik.io/traefik"
-  chart      = "traefik"
-  version    = "9.4.3"
-  
-  set {
-    name = "deployment.replicas"
-    value = "2"
-  }
-}
-
-data "kubernetes_service" "traefik" {
-  metadata {
-    name = "traefik"
-    namespace = "default"
-  }
-
-  depends_on = [helm_release.traefik]
 }
 
 output "cluster_access" {
@@ -83,8 +62,4 @@ output "cluster_access" {
     token: digitalocean_kubernetes_cluster.cluster.kube_config[0].token
     ca_cert: digitalocean_kubernetes_cluster.cluster.kube_config[0].cluster_ca_certificate
   }
-}
-
-output "ingress_ip" {
-  value = data.kubernetes_service.traefik.load_balancer_ingress[0].ip
 }
