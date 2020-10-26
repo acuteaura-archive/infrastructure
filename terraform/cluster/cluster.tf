@@ -36,10 +36,14 @@ provider "helm" {
   }
 }
 
+provider "cloudflare" {
+  version = "~> 2.0"
+}
+
 locals {
   default_node_pool = {
     size = "s-2vcpu-4gb"
-    node_count = 1
+    node_count = 2
   }
 }
 
