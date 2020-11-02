@@ -1,0 +1,10 @@
+- debug:
+    msg: ansible_facts['os_family']
+
+- name: Common tasks for Fedora
+  import_tasks: fedora.yml
+  when: ansible_facts['os_family']|lower == 'fedora'
+
+- name: Common tasks for Fedora CoreOS
+  import_tasks: fcos.yml
+  when: ansible_facts['os_family']|lower == 'fedora-coreos'

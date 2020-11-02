@@ -1,0 +1,48 @@
+---
+- name: Install Fedora CoreOS
+  hosts: all
+  tasks:
+  - name: Upgrade all packages
+    dnf:
+      name: "*"
+      state: latest
+  - name: Install basic tools
+    dnf:
+      name: ["htop", "fish"]
+      state: latest
+  - name: Disable SSH password auth
+    lineinfile: 
+      dest: "/etc/ssh/sshd_config" 
+      regexp: '^#?PasswordAuthentication ' 
+      line: 'PasswordAuthentication no'
+  - name: Restart SSH before adding passworded users
+    service:
+      name: sshd
+      state: restarted
+  - name: Set fish shell for root
+    user:
+      name: root
+      shell: /usr/bin/fish
+  - name: Create "aurelia" user
+    user:
+      name: aurelia
+      groups: wheel
+      # this is "weaknesspays"
+      # fine since password auth is disabled in SSH
+      # meant to be changed immediately after booting a box up
+      password: $6$hsPjM8Qfa4GY3VnY$t2mNViVXo9L4NFZ3K6mxaNpng0xNSEud/JhrBsV91ZtL1/06IeVFUDmbYqsAzm45NucwaR9zOAp2N1gPVvFaJ1
+  - name: Create .ssh for "aurelia"
+    file:
+      state: directory
+      path: "/home/aurelia/.ssh/"
+      mode: "0700"
+      owner: aurelia
+      group: aurelia
+  - name: Copy SSH keys for "aurelia"
+    get_url:
+      url: https://gist.githubusercontent.com/acuteaura/d534eff464deffa60479d8bdbd4803ed/raw/gistfile1.txt
+      dest: "/home/aurelia/.ssh/authorized_keys"
+      mode: "0600"
+      owner: aurelia
+      group: aurelia
+    
