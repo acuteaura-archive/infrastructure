@@ -1,0 +1,26 @@
+[Unit]
+Description=Concourse CI worker
+ConditionFileNotEmpty=/opt/concourse/worker_key
+ConditionFileNotEmpty=/opt/concourse/tsa_host_key.pub
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile=/etc/default/concourse-worker
+ExecStart=/opt/concourse/bin/concourse worker
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=concourse_worker
+Restart=on-failure 
+RestartSec=5
+TimeoutStopSec=30
+StartLimitInterval=60
+StartLimitIntervalSec=60
+StartLimitBurst=3
+LimitNOFILE=65536
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

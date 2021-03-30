@@ -1,5 +1,0 @@
----
-- name: Install Fedora CoreOS
-  hosts: all
-  roles:
-    - common

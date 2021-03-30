@@ -1,6 +1,6 @@
 *.tfstate
-/.envrc
-/terraform/*/.terraform
+.envrc
+.terraform
 *.crt
 *.key
 *.tmp

@@ -1,0 +1,6 @@
+#cloud-config
+
+# fc33 boldly disabled ssh-rsa
+# packer boldly doesn't support anything else
+bootcmd:
+  - sed -i -r -e 's/^(PubkeyAcceptedKeyTypes )(.*)/\1ssh-rsa,\2/' /etc/crypto-policies/back-ends/opensshserver.config

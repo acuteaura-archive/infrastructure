@@ -1,0 +1,44 @@
+---
+ - name: "Concourse Worker"
+   hosts: default
+   tasks:
+    - name: "install grubby"
+      ansible.builtin.dnf:
+        update_cache: true
+        name: grubby
+        state: present
+    - name: "disable CgroupsV2"
+      shell: grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+    - name: "install Concourse"
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: https://github.com/concourse/concourse/releases/download/v7.0.0/concourse-7.0.0-linux-amd64.tgz
+        dest: /opt
+    - name: "install concourse tsa key"
+      ansible.builtin.copy:
+        dest: /opt/concourse/tsa_host_key.pub
+        src: ./files/tsa_host_key.pub
+    - name: "install concourse worker systemd service"
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/concourse-worker.service
+        src: ./files/concourse-worker.service
+    - name: "install concourse keygen systemd service"
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/concourse-keygen.service
+        src: ./files/concourse-keygen.service
+    - name: "install concourse worker environment"
+      ansible.builtin.copy:
+        dest: /etc/default/concourse-worker
+        src: ./files/concourse-worker.env
+    - name: "enable concourse worker systemd service"
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: concourse-worker.service
+        enabled: true
+    - name: "enable concourse keygen systemd service"
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: concourse-keygen.service
+        enabled: true
+    - name: "reset cloud-init"
+      shell: cloud-init clean
